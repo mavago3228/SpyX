@@ -5420,9 +5420,11 @@ function renderFiles(){
 }
 setInterval(()=>{document.querySelectorAll('[data-tz]').forEach(e=>e.textContent='Hora local '+localTime(e.dataset.tz));},30000);
 let curDef=null;
+let menuBuild=null;
 async function openBrief(def){
   ac();
   if(openBrief.busy)return;
+  if(menuBuild){openBrief.busy=true;try{await showLoading('Preparando la agencia…');await menuBuild;}finally{openBrief.busy=false;}hideLoading();}
   if(!CTX||CTX.def!==def){openBrief.busy=true;try{await showLoading('Infiltrándose en '+def.name+'…');await buildCity(def);}finally{openBrief.busy=false;}hideLoading();}
   curDef=def;openFolder=def.base||def;state='brief';menuShadow();$('#alertEdge').style.boxShadow='none';
   $('#menu').hidden=true;$('#brief').hidden=false;
@@ -5532,9 +5534,9 @@ function frame(){
 }
 (async function init(){
   applyQuality();setMute(muted);
-  try{await buildCity(CITIES[0]);}catch(e){console.error(e);$('#ldTxt').textContent='No se pudo construir la ciudad: '+e.message;return;}
-  menuShadow();state='menu';hideLoading();$('#menu').hidden=false;renderFiles();
-  frame();loadPost();
+  menuShadow();state='menu';hideLoading();$('#menu').hidden=false;renderFiles();frame();
+  menuBuild=(async()=>{try{await buildCity(CITIES[0]);}catch(e){console.error(e);}})();
+  await menuBuild;menuBuild=null;loadPost();
 })();
 /*__END__*/}catch(__e){
   console.error(__e);
